@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Browser Usage Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Daily Browser Dashboard</h1>
+        <p>
+          Monitor your daily browsing habits and get alerts for excessive
+          entertainment!
+        </p>
+      </header>
+      <div class="chart-container">
+        <canvas id="usageChart"></canvas>
+      </div>
+      <!-- Secondary chart container for "Other" details -->
+      <div id="otherChartContainer">
+        <h2>Other Websites Breakdown</h2>
+        <canvas id="otherChart"></canvas>
+        <button onclick="hideOtherChart()">Close</button>
+      </div>
+      <div class="list-container">
+        <h2>Usage Details</h2>
+        <ul id="usageList"></ul>
+      </div>
+      <footer>
+        <p>&copy; 2025 Browser Usage Dashboard</p>
+      </footer>
+    </div>
+    <script src="popup.bundle.js"></script>
+  </body>
+</html>

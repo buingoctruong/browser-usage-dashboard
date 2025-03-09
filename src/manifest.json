@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Usage Dashboard",
+  "version": "1.0",
+  "description": "Tracks your browsing habits and shows a usage dashboard.",
+  "permissions": ["tabs", "storage", "notifications", "alarms"],
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  }
+}
