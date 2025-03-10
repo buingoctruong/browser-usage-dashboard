@@ -1,13 +1,3 @@
-const entertainingSites = [
-  "youtube.com",
-  "netflix.com",
-  "facebook.com",
-  "www.instagram.com",
-  "twitter.com",
-  "reddit.com",
-  "tiktok.com",
-];
-
 let activeTabId = null;
 
 // Update activeTabId on tab activation.
@@ -28,26 +18,7 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
   }
 });
 
-// Every second, add 1 second to the current active tab’s usage.
-setInterval(() => {
-  if (activeTabId) {
-    chrome.tabs.get(activeTabId, (tab) => {
-      if (tab && tab.url) {
-        const domain = getDomain(tab.url);
-        chrome.storage.local.get({ usageData: {} }, (data) => {
-          let usageData = data.usageData;
-          usageData[domain] = (usageData[domain] || 0) + 1; // add one second
-          chrome.storage.local.set({ usageData }, () => {
-            // After updating usage, check for entertainment alert.
-            checkEntertainmentAlert(usageData);
-          });
-        });
-      }
-    });
-  }
-}, 1000);
-
-// Helper function to extract domain from URL.
+// Helper function to extract domain from a URL.
 function getDomain(url) {
   try {
     const u = new URL(url);
@@ -57,41 +28,66 @@ function getDomain(url) {
   }
 }
 
-// Check if total time on entertainment sites exceeds 7200 seconds (2 hours).
-function checkEntertainmentAlert(usageData) {
-  let totalEntertainmentTime = 0;
-  for (let domain in usageData) {
-    for (let site of entertainingSites) {
-      if (domain.includes(site)) {
-        totalEntertainmentTime += usageData[domain];
+/**
+ * Checks if the time spent on a domain exceeds the user-defined limit.
+ * If the limit is reached and an alert has not been shown for that domain,
+ * a notification is triggered.
+ */
+function checkUserDomainLimit(domain, timeSpent) {
+  chrome.storage.local.get(
+    { domainLimits: {}, alertedDomains: {} },
+    (settings) => {
+      const { domainLimits, alertedDomains } = settings;
+      // Debug log for checking domain limits
+      console.log(
+        `Checking ${domain}: timeSpent = ${timeSpent}, limit = ${
+          domainLimits[domain] || "none"
+        }`
+      );
+      if (domainLimits[domain] && timeSpent >= domainLimits[domain]) {
+        if (!alertedDomains[domain]) {
+          chrome.notifications.create(
+            // `${domain}Alert`,
+            {
+              type: "basic",
+              iconUrl: "assets/icon48.png",
+              title: "Time Limit Alert",
+              message: `You have exceeded your time limit for ${domain}!`,
+              priority: 2,
+            },
+            () => {
+              console.log(`Alert for ${domain} created.`);
+            }
+          );
+          alertedDomains[domain] = true;
+          chrome.storage.local.set({ alertedDomains });
+        }
       }
     }
-  }
-  if (totalEntertainmentTime >= 30) {
-    chrome.storage.local.get({ alertShown: false }, (data) => {
-      if (!data.alertShown) {
-        chrome.notifications.create(
-          "entertainmentAlert",
-          {
-            type: "basic",
-            iconUrl: "assets/icon48.png",
-            title: "Time Alert",
-            message:
-              "You have spent more than 2 hours on entertaining websites today!",
-            priority: 2,
-          },
-          () => {
-            console.log("Entertainment alert notification created.");
-          }
-        );
-        chrome.storage.local.set({ alertShown: true });
+  );
+}
+
+// Every second, add 1 second to the current active tab's usage.
+setInterval(() => {
+  if (activeTabId) {
+    chrome.tabs.get(activeTabId, (tab) => {
+      if (tab && tab.url) {
+        const domain = getDomain(tab.url);
+        chrome.storage.local.get({ usageData: {} }, (data) => {
+          let usageData = data.usageData;
+          usageData[domain] = (usageData[domain] || 0) + 1; // add one second
+          chrome.storage.local.set({ usageData }, () => {
+            // Check the current domain's usage against its limit.
+            checkUserDomainLimit(domain, usageData[domain]);
+          });
+        });
       }
     });
   }
-}
+}, 1000);
 
 // --- Daily Reset Logic ---
-// Schedule an alarm to reset usage data at midnight (alarm is silent).
+// Schedule an alarm to reset usage data and alert flags at midnight.
 function scheduleDailyReset() {
   const now = new Date();
   const nextMidnight = new Date(
@@ -107,8 +103,8 @@ function scheduleDailyReset() {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "dailyReset") {
-    chrome.storage.local.set({ usageData: {}, alertShown: false }, () => {
-      console.log("Daily usage data reset.");
+    chrome.storage.local.set({ usageData: {}, alertedDomains: {} }, () => {
+      console.log("Daily usage data and alert flags reset.");
     });
   }
 });

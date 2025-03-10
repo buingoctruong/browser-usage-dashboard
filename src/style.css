@@ -8,6 +8,7 @@ body {
 
 /* Container Card */
 .container {
+  min-width: 350px;
   max-width: 400px;
   margin: 20px auto;
   background: #fff;
@@ -90,4 +91,119 @@ footer {
   padding: 10px;
   font-size: 0.8em;
   color: #666;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  justify-content: space-around;
+  background: #f1f1f1;
+  padding: 10px 0;
+  border-bottom: 2px solid #ddd;
+}
+
+.nav-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: none;
+  font-size: 1em;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.nav-tabs button.active {
+  font-weight: bold;
+  border-bottom: 3px solid #4a90e2;
+}
+
+/* Ensure #configView matches the container width */
+#configView {
+  display: none;
+  width: 100%; /* Ensures it takes the full width */
+  max-width: 400px; /* Matches the main container */
+  margin: 0 auto; /* Centers the section */
+  box-sizing: border-box;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Domain Settings Form */
+#domainForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#domainForm input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+#domainForm button {
+  width: 100%;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#domainForm button:hover {
+  background: #357ab7;
+}
+
+/* Domain List Styling */
+#currentLimits {
+  margin-top: 20px;
+}
+
+#limitsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.domain-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #f9f9f9;
+  width: 100%;
+}
+
+.domain-item span {
+  flex: 1;
+  font-size: 0.9em;
+  color: #333;
+  word-break: break-word;
+}
+
+.domain-item button {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.domain-item button.edit {
+  background: #f5a623;
+}
+
+.domain-item button:hover {
+  opacity: 0.8;
 }

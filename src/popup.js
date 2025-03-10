@@ -5,7 +5,7 @@ const MAX_VISIBLE_DOMAINS = 5; // Maximum number of domains to display individua
 let currentUsageData = {}; // Global variable to store the latest usage data
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Fetch usage data from chrome.storage and update the UI
+  // Load usage data and update the UI for the dashboard view.
   chrome.storage.local.get({ usageData: {} }, (data) => {
     const usageData = data.usageData;
     currentUsageData = usageData;
@@ -13,7 +13,27 @@ document.addEventListener("DOMContentLoaded", () => {
     updateUsageList(usageData);
   });
 
-  // Listen for clicks on the chart canvas to detect clicks on the "Other" slice
+  // Setup navigation tabs to toggle between views.
+  const dashboardTab = document.getElementById("dashboardTab");
+  const configTab = document.getElementById("configTab");
+  const dashboardView = document.getElementById("dashboardView");
+  const configView = document.getElementById("configView");
+
+  dashboardTab.addEventListener("click", () => {
+    dashboardTab.classList.add("active");
+    configTab.classList.remove("active");
+    dashboardView.style.display = "block";
+    configView.style.display = "none";
+  });
+
+  configTab.addEventListener("click", () => {
+    configTab.classList.add("active");
+    dashboardTab.classList.remove("active");
+    configView.style.display = "block";
+    dashboardView.style.display = "none";
+  });
+
+  // Listen for clicks on the chart canvas to detect clicks on the "Other" slice.
   document
     .getElementById("usageChart")
     .addEventListener("click", function (event) {
@@ -32,19 +52,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
+
+  // Handle domain form submission for adding/updating domain limits.
+  const domainForm = document.getElementById("domainForm");
+  domainForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const domainInput = document.getElementById("domainInput").value.trim();
+    const limitInput = document.getElementById("limitInput").value.trim();
+    const limit = parseInt(limitInput, 10);
+    if (domainInput && !isNaN(limit)) {
+      // Retrieve current domain limits, update with the new/updated domain, then save.
+      chrome.storage.local.get({ domainLimits: {} }, (data) => {
+        const domainLimits = data.domainLimits;
+        domainLimits[domainInput] = limit;
+        chrome.storage.local.set({ domainLimits }, () => {
+          updateLimitsList(domainLimits);
+          // Clear the form inputs.
+          document.getElementById("domainInput").value = "";
+          document.getElementById("limitInput").value = "";
+        });
+      });
+    }
+  });
+
+  // Load domain limits and update the list on popup load.
+  chrome.storage.local.get({ domainLimits: {} }, (data) => {
+    updateLimitsList(data.domainLimits);
+  });
 });
 
-// Update the main chart with usage data, grouping extra domains as "Other"
+// Update the main chart with usage data, grouping extra domains as "Other".
 function updateChart(usageData) {
-  currentUsageData = usageData; // Store globally for later use in breakdown
-  // Sort the entries by time descending
+  currentUsageData = usageData; // Store globally for later use in breakdown.
+  // Sort the entries by time descending.
   const sorted = Object.entries(usageData).sort((a, b) => b[1] - a[1]);
   const topEntries = sorted.slice(0, MAX_VISIBLE_DOMAINS);
   const otherEntries = sorted.slice(MAX_VISIBLE_DOMAINS);
   const labels = topEntries.map((item) => item[0]);
   const times = topEntries.map((item) => Math.round(item[1]));
 
-  // Group the remaining domains into "Other"
+  // Group the remaining domains into "Other".
   if (otherEntries.length > 0) {
     const otherTotal = otherEntries.reduce((sum, item) => sum + item[1], 0);
     labels.push("Other");
@@ -85,10 +132,10 @@ function updateChart(usageData) {
   }
 }
 
-// Update the usage list displayed below the chart
+// Update the usage list displayed below the chart.
 function updateUsageList(usageData) {
   const usageList = document.getElementById("usageList");
-  usageList.innerHTML = ""; // Clear existing list
+  usageList.innerHTML = ""; // Clear existing list.
   const domains = Object.keys(usageData).sort(
     (a, b) => usageData[b] - usageData[a]
   );
@@ -99,7 +146,7 @@ function updateUsageList(usageData) {
   });
 }
 
-// When "Other" is clicked, return a breakdown string of the grouped domains
+// When "Other" is clicked, return a breakdown string of the grouped domains.
 function getOtherBreakdown() {
   const sorted = Object.entries(currentUsageData).sort((a, b) => b[1] - a[1]);
   const otherEntries = sorted.slice(MAX_VISIBLE_DOMAINS);
@@ -115,4 +162,32 @@ function generateColors(n) {
     colors.push(`hsl(${(i * 360) / n}, 70%, 60%)`);
   }
   return colors;
+}
+
+/**
+ * Update the "Current Domain Limits" list in the UI.
+ * domainLimits is an object with domain names as keys and time limits (in seconds) as values.
+ */
+function updateLimitsList(domainLimits) {
+  const limitsList = document.getElementById("limitsList");
+  limitsList.innerHTML = ""; // Clear current list.
+  Object.keys(domainLimits).forEach((domain) => {
+    const li = document.createElement("li");
+    li.textContent = `${domain}: ${domainLimits[domain]} s`;
+    // Add a remove button to allow deletion of the domain limit.
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "Remove";
+    removeBtn.style.marginLeft = "10px";
+    removeBtn.addEventListener("click", () => {
+      chrome.storage.local.get({ domainLimits: {} }, (data) => {
+        const limits = data.domainLimits;
+        delete limits[domain];
+        chrome.storage.local.set({ domainLimits: limits }, () => {
+          updateLimitsList(limits);
+        });
+      });
+    });
+    li.appendChild(removeBtn);
+    limitsList.appendChild(li);
+  });
 }

@@ -8,29 +8,54 @@
   <body>
     <div class="container">
       <header>
-        <h1>Daily Browser Dashboard</h1>
-        <p>
-          Monitor your daily browsing habits and get alerts for excessive
-          entertainment!
-        </p>
+        <h1>Browser Usage Dashboard</h1>
       </header>
-      <div class="chart-container">
-        <canvas id="usageChart"></canvas>
-      </div>
-      <!-- Secondary chart container for "Other" details -->
-      <div id="otherChartContainer">
-        <h2>Other Websites Breakdown</h2>
-        <canvas id="otherChart"></canvas>
-        <button onclick="hideOtherChart()">Close</button>
-      </div>
-      <div class="list-container">
-        <h2>Usage Details</h2>
-        <ul id="usageList"></ul>
-      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button id="dashboardTab" class="active">Usage Overview</button>
+        <button id="configTab">Domain Settings</button>
+      </nav>
+
+      <!-- Dashboard View -->
+      <section id="dashboardView">
+        <div class="chart-container">
+          <canvas id="usageChart"></canvas>
+        </div>
+        <div class="list-container">
+          <h2>Usage Details</h2>
+          <ul id="usageList"></ul>
+        </div>
+      </section>
+
+      <!-- Domain Configuration View -->
+      <section id="configView" style="display: none">
+        <h2>Domain Settings</h2>
+        <form id="domainForm">
+          <input
+            type="text"
+            id="domainInput"
+            placeholder="Enter domain (e.g., youtube.com)"
+            required
+          />
+          <input
+            type="number"
+            id="limitInput"
+            placeholder="Time limit in minutes"
+            required
+          />
+          <button type="submit">Add/Update Domain</button>
+        </form>
+        <div id="currentLimits">
+          <h3>Current Domain Limits</h3>
+          <ul id="limitsList"></ul>
+        </div>
+      </section>
+
       <footer>
         <p>&copy; 2025 Browser Usage Dashboard</p>
       </footer>
+      <script src="popup.bundle.js"></script>
     </div>
-    <script src="popup.bundle.js"></script>
   </body>
 </html>
