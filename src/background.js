@@ -44,19 +44,23 @@ function checkUserDomainLimit(domain, timeSpent) {
           domainLimits[domain] || "none"
         }`
       );
+
       if (domainLimits[domain] && timeSpent >= domainLimits[domain]) {
         if (!alertedDomains[domain]) {
           chrome.notifications.create(
-            // `${domain}Alert`,
             {
               type: "basic",
               iconUrl: "assets/icon48.png",
               title: "Time Limit Alert",
               message: `You have exceeded your time limit for ${domain}!`,
               priority: 2,
+              requireInteraction: true,
             },
             () => {
-              console.log(`Alert for ${domain} created.`);
+              // Debug log for checking notification creation
+              console.log(
+                `Time limit exceeded notification created for ${domain}`
+              );
             }
           );
           alertedDomains[domain] = true;

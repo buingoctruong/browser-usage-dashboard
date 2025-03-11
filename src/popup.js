@@ -60,14 +60,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const domainInput = document.getElementById("domainInput").value.trim();
     const limitInput = document.getElementById("limitInput").value.trim();
     const limit = parseInt(limitInput, 10);
+
     if (domainInput && !isNaN(limit)) {
-      // Retrieve current domain limits, update with the new/updated domain, then save.
-      chrome.storage.local.get({ domainLimits: {} }, (data) => {
+      // Retrieve current domain limits and usage data
+      chrome.storage.local.get({ domainLimits: {}, usageData: {} }, (data) => {
         const domainLimits = data.domainLimits;
+        const usageData = data.usageData;
+
+        // Update the domain limit
         domainLimits[domainInput] = limit;
-        chrome.storage.local.set({ domainLimits }, () => {
+
+        // Reset the time spent for this domain
+        usageData[domainInput] = 0;
+
+        // Save the updated data
+        chrome.storage.local.set({ domainLimits, usageData }, () => {
           updateLimitsList(domainLimits);
-          // Clear the form inputs.
+
+          // Clear the form inputs
           document.getElementById("domainInput").value = "";
           document.getElementById("limitInput").value = "";
         });
@@ -179,13 +189,25 @@ function updateLimitsList(domainLimits) {
     removeBtn.textContent = "Remove";
     removeBtn.style.marginLeft = "10px";
     removeBtn.addEventListener("click", () => {
-      chrome.storage.local.get({ domainLimits: {} }, (data) => {
-        const limits = data.domainLimits;
-        delete limits[domain];
-        chrome.storage.local.set({ domainLimits: limits }, () => {
-          updateLimitsList(limits);
-        });
-      });
+      chrome.storage.local.get(
+        { domainLimits: {}, alertedDomains: {} },
+
+        (data) => {
+          const limits = data.domainLimits;
+          delete limits[domain];
+
+          chrome.storage.local.set({ domainLimits: limits }, () => {
+            updateLimitsList(limits);
+          });
+
+          if (data.alertedDomains[domain]) {
+            const alerts = data.alertedDomains;
+            delete alerts[domain];
+
+            chrome.storage.local.set({ alertedDomains: alerts });
+          }
+        }
+      );
     });
     li.appendChild(removeBtn);
     limitsList.appendChild(li);
