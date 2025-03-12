@@ -93,9 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Update the main chart with usage data, grouping extra domains as "Other".
 function updateChart(usageData) {
-  currentUsageData = usageData; // Store globally for later use in breakdown.
+  // Store globally for later use in breakdown.
+  currentUsageData = usageData;
   // Sort the entries by time descending.
   const sorted = Object.entries(usageData).sort((a, b) => b[1] - a[1]);
+
   const topEntries = sorted.slice(0, MAX_VISIBLE_DOMAINS);
   const otherEntries = sorted.slice(MAX_VISIBLE_DOMAINS);
   const labels = topEntries.map((item) => item[0]);
@@ -116,7 +118,7 @@ function updateChart(usageData) {
         labels: labels,
         datasets: [
           {
-            label: "Time Spent (s)",
+            label: "Time Spent",
             data: times,
             backgroundColor: generateColors(labels.length),
           },
@@ -128,6 +130,15 @@ function updateChart(usageData) {
         plugins: {
           legend: {
             position: "bottom",
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const seconds = context.raw;
+                const formattedTime = formatTimeForTooltip(seconds);
+                return ` Time Spent: ${formattedTime}`;
+              },
+            },
           },
         },
       },
@@ -151,7 +162,7 @@ function updateUsageList(usageData) {
   );
   domains.forEach((domain) => {
     const li = document.createElement("li");
-    li.textContent = `${domain}: ${Math.round(usageData[domain])} seconds`;
+    li.textContent = `${domain}: ${formatTimeForTooltip(usageData[domain])}`;
     usageList.appendChild(li);
   });
 }
@@ -183,11 +194,15 @@ function updateLimitsList(domainLimits) {
   limitsList.innerHTML = ""; // Clear current list.
   Object.keys(domainLimits).forEach((domain) => {
     const li = document.createElement("li");
-    li.textContent = `${domain}: ${domainLimits[domain]} s`;
+    li.textContent = `${domain}: ${formatTimeForTooltip(
+      domainLimits[domain] * 60
+    )}`;
+
     // Add a remove button to allow deletion of the domain limit.
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "Remove";
     removeBtn.style.marginLeft = "10px";
+
     removeBtn.addEventListener("click", () => {
       chrome.storage.local.get(
         { domainLimits: {}, alertedDomains: {} },
@@ -209,7 +224,18 @@ function updateLimitsList(domainLimits) {
         }
       );
     });
+
     li.appendChild(removeBtn);
     limitsList.appendChild(li);
   });
+}
+
+// Helper function to format seconds as mm:ss.
+function formatTimeForTooltip(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  // Pad minutes to at least 2 digits, but if minutes is larger (e.g. 999) it remains unchanged.
+  const minsStr = mins.toString().padStart(2, "0");
+  const secsStr = secs.toString().padStart(2, "0");
+  return `${minsStr}:${secsStr}`;
 }

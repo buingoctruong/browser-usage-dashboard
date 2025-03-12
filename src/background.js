@@ -38,14 +38,9 @@ function checkUserDomainLimit(domain, timeSpent) {
     { domainLimits: {}, alertedDomains: {} },
     (settings) => {
       const { domainLimits, alertedDomains } = settings;
-      // Debug log for checking domain limits
-      console.log(
-        `Checking ${domain}: timeSpent = ${timeSpent}, limit = ${
-          domainLimits[domain] || "none"
-        }`
-      );
+      const domainLimitsAsSecond = domainLimits[domain] * 60;
 
-      if (domainLimits[domain] && timeSpent >= domainLimits[domain]) {
+      if (domainLimits[domain] && timeSpent >= domainLimitsAsSecond) {
         if (!alertedDomains[domain]) {
           chrome.notifications.create(
             {
