@@ -21,10 +21,14 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
 // Helper function to extract domain from a URL.
 function getDomain(url) {
   try {
+    if (url.startsWith("chrome://") || url === "about:blank") {
+      return null; // Ignore all Chrome internal pages and blank pages
+    }
     const u = new URL(url);
     return u.hostname;
   } catch (e) {
-    return "unknown";
+    // Ignore unknown tabs
+    return null;
   }
 }
 
@@ -72,6 +76,8 @@ setInterval(() => {
     chrome.tabs.get(activeTabId, (tab) => {
       if (tab && tab.url) {
         const domain = getDomain(tab.url);
+        if (!domain) return; // Skip new tab and unknown pages
+
         chrome.storage.local.get({ usageData: {} }, (data) => {
           let usageData = data.usageData;
           usageData[domain] = (usageData[domain] || 0) + 1; // add one second

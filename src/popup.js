@@ -172,7 +172,7 @@ function getOtherBreakdown() {
   const sorted = Object.entries(currentUsageData).sort((a, b) => b[1] - a[1]);
   const otherEntries = sorted.slice(MAX_VISIBLE_DOMAINS);
   return otherEntries
-    .map(([domain, time]) => `${domain}: ${Math.round(time)} s`)
+    .map(([domain, time]) => `${domain}: ${formatTimeForTooltip(time)}`)
     .join("\n");
 }
 
